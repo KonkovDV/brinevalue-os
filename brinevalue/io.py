@@ -5,17 +5,74 @@ from .chemistry import Brine, IONS, NEUTRAL
 ALL_SPECIES = list(IONS) + list(NEUTRAL)
 
 
+def _finite_nonneg(value, label, default=None):
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        if default is not None:
+            return float(default)
+        raise ValueError(f"missing value for {label}")
+    try:
+        fv = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"non-numeric value for {label}: {value!r}") from exc
+    if not np.isfinite(fv):
+        raise ValueError(f"non-finite value for {label}")
+    if fv < 0:
+        raise ValueError(f"negative value for {label}")
+    return fv
+
+
 def brine_from_row(row, name="stream"):
-    ions = {i: float(row[i]) for i in ALL_SPECIES if i in row and pd.notna(row[i])}
-    return Brine(ions=ions, flow=float(row.get("flow", 1000)),
-                 temp=float(row.get("temp", 25)), ph=float(row.get("ph", 6.5)),
-                 org=float(row.get("org", 0)), name=str(row.get("name", name)),
-                 unc={"Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "K": 0.3, "B": 0.3, "flow": 0.2})
+    ions = {}
+    for i in ALL_SPECIES:
+        if i in row and pd.notna(row[i]):
+            ions[i] = _finite_nonneg(row[i], i)
+    temp = 25.0
+    if "temp" in row and pd.notna(row.get("temp")):
+        try:
+            temp = float(row["temp"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"non-numeric value for temp: {row['temp']!r}") from exc
+    ph = 6.5
+    if "ph" in row and pd.notna(row.get("ph")):
+        try:
+            ph = float(row["ph"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"non-numeric value for ph: {row['ph']!r}") from exc
+    b = Brine(
+        ions=ions,
+        flow=_finite_nonneg(row.get("flow", 1000), "flow", 1000),
+        temp=temp,
+        ph=ph,
+        org=_finite_nonneg(row.get("org", 0), "org", 0),
+        name=str(row["name"]) if "name" in row and pd.notna(row.get("name")) else str(name),
+        unc={"Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "K": 0.3, "B": 0.3, "flow": 0.2},
+    )
+    b.validate(strict_species=True)
+    return b
 
 
 def load_table(path):
-    df = pd.read_excel(path) if str(path).endswith(("xlsx", "xls")) else pd.read_csv(path)
-    return [brine_from_row(r, f"stream_{i}") for i, r in df.iterrows()]
+    path_s = str(path)
+    if path_s.lower().endswith(("xlsx", "xls")):
+        df = pd.read_excel(path)
+    else:
+        df = pd.read_csv(path)
+    if df.empty:
+        raise ValueError(f"empty table: {path}")
+    out = []
+    errors = []
+    for i, r in df.iterrows():
+        try:
+            out.append(brine_from_row(r, f"stream_{i}"))
+        except (TypeError, ValueError) as exc:
+            errors.append(f"row {i}: {exc}")
+    if not out:
+        raise ValueError("no valid rows in table: " + "; ".join(errors[:5]))
+    if errors:
+        # Partial load is useful for screening; surface issues on stderr-like print path via CLI.
+        import sys
+        print(f"warning: skipped {len(errors)} invalid row(s): {errors[0]}", file=sys.stderr)
+    return out
 
 
 def synthetic_streams(n=8, seed=0):

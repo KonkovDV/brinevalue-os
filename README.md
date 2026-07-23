@@ -20,7 +20,8 @@ python run_tests.py
 ```
 API: `uvicorn brinevalue.api:app --host 127.0.0.1 --port 8000`  
 UI: `streamlit run brinevalue/dashboard.py`  
-Docker: `docker compose up` (operator must not expose publicly without controls)
+Docker: `docker compose up` (binds **127.0.0.1** only; set `BRINEVALUE_API_TOKEN` for API auth).
+AppSec plan: `docs/SECURITY_REMEDIATION_PLAN_2026_07_23.md`.
 
 ## Конвейер
 QC (баланс) → SI (Davies if I≤0.5) → перебор схем → TEA → P(NPV>0)+stability →

@@ -7,7 +7,7 @@ twin, not FEED, not a product certificate.
 __version__ = "0.5.2"
 from .chemistry import (
     Brine, ionic_balance, scaling_risk, mg_li_ratio, davies_gamma,
-    DAVIES_VALID_I_MAX, KSP_REFERENCE_TEMP_C,
+    DAVIES_VALID_I_MAX, KSP_REFERENCE_TEMP_C, KNOWN_SPECIES,
 )
 from .process import UNIT_LIBRARY, evaluate_flowsheet
 from .economics import economics, price_scenarios, tea_scenarios, PRODUCT_PRICE, PRICE_UNIT

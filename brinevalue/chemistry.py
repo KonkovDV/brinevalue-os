@@ -18,9 +18,15 @@ IONS = {
     "Br": (-1, 79.90), "I": (-1, 126.90),
 }
 NEUTRAL = {"B": 10.81}
+KNOWN_SPECIES = frozenset(list(IONS) + list(NEUTRAL))
 # Products with a recovery path in UNIT_LIBRARY. I is tracked/priced but has no unit yet.
 RECOVERABLE = ["Li", "Br", "Sr", "K", "B"]
 TRACKED_OPTIONAL = ["I"]
+# Hard caps for untrusted / API inputs (screening domain, not plant limits).
+MAX_ION_CONC_MG_L = 5.0e5
+MAX_FLOW_M3_DAY = 1.0e6
+MAX_NAME_LEN = 200
+MAX_IONS_KEYS = 32
 
 KSP = {"CaCO3": 10**-8.48, "CaSO4": 10**-4.58, "BaSO4": 10**-9.97, "SrSO4": 10**-6.63}
 LOG_KSP_HALITE = 1.58
@@ -58,26 +64,59 @@ class Brine:
             I += self.molar(i) * IONS[i][0] ** 2
         return 0.5 * I
 
-    def validate(self):
+    def validate(self, *, strict_species=False):
+        """Validate numeric ranges. Optionally reject unknown ion keys (API/untrusted)."""
+        if self.name is None or not isinstance(self.name, str):
+            raise ValueError("name must be a string")
+        if len(self.name) > MAX_NAME_LEN:
+            raise ValueError(f"name exceeds {MAX_NAME_LEN} characters")
+        if not isinstance(self.ions, dict):
+            raise ValueError("ions must be a dict")
+        if len(self.ions) > MAX_IONS_KEYS:
+            raise ValueError(f"ions exceeds {MAX_IONS_KEYS} keys")
         for label, val in (("flow", self.flow), ("temp", self.temp), ("ph", self.ph), ("org", self.org)):
-            if val is None or not math.isfinite(float(val)):
+            try:
+                fval = float(val)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{label} must be numeric") from exc
+            if not math.isfinite(fval):
                 raise ValueError(f"{label} must be finite")
+        self.flow = float(self.flow)
+        self.temp = float(self.temp)
+        self.ph = float(self.ph)
+        self.org = float(self.org)
         if self.flow < 0:
             raise ValueError("flow must be non-negative")
+        if self.flow > MAX_FLOW_M3_DAY:
+            raise ValueError(f"flow exceeds screening max {MAX_FLOW_M3_DAY:g} m3/day")
         if not (0.0 <= self.ph <= 14.0):
             raise ValueError("pH must be in [0,14]")
         if not (-50.0 <= self.temp <= 250.0):
             raise ValueError("temperature outside supported range")
         if self.org < 0:
             raise ValueError("org must be non-negative")
+        unknown = [k for k in self.ions if k not in KNOWN_SPECIES]
+        if strict_species and unknown:
+            raise ValueError(f"unknown ion species: {unknown}")
         bad = []
+        coerced = {}
         for k, v in self.ions.items():
-            if v is None or (isinstance(v, float) and not math.isfinite(v)) or float(v) < 0:
+            if k not in KNOWN_SPECIES:
+                continue  # ignored unless strict_species (already raised)
+            try:
+                fv = float(v)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"non-numeric concentration for {k}") from exc
+            if not math.isfinite(fv) or fv < 0:
                 bad.append(k)
-            elif not math.isfinite(float(v)):
-                bad.append(k)
+                continue
+            if fv > MAX_ION_CONC_MG_L:
+                raise ValueError(f"{k} concentration exceeds {MAX_ION_CONC_MG_L:g} mg/L")
+            coerced[k] = fv
         if bad:
             raise ValueError(f"negative, missing, or non-finite concentrations: {bad}")
+        # Drop unknown keys and normalize numerics for downstream math.
+        self.ions = coerced
         return True
 
 

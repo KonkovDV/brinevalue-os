@@ -1,4 +1,7 @@
-"""Streamlit UI. streamlit run brinevalue/dashboard.py"""
+"""Streamlit UI. Intended for local loopback only.
+
+streamlit run brinevalue/dashboard.py --server.address 127.0.0.1
+"""
 try:
     import streamlit as st
 except Exception:
@@ -9,10 +12,15 @@ if st is not None:
     from .pipeline import analyze
     st.set_page_config(page_title="BrineValue OS", layout="wide")
     st.title("BrineValue OS v0.5.2 — скрининг пластовых вод (advisory)")
-    st.caption("Не цифровой двойник. Не FEED. Не battery-grade. Данные demo — синтетические.")
+    st.caption(
+        "Не цифровой двойник. Не FEED. Не battery-grade. Данные demo — синтетические. "
+        "Локальный UI: не публикуйте порт 8501 в интернет."
+    )
     streams = synthetic_streams(8)
     idx = st.selectbox("Поток", range(len(streams)), format_func=lambda i: streams[i].name)
-    b = streams[idx]; res = analyze(b)
+    b = streams[idx]
+    with st.spinner("Анализ…"):
+        res = analyze(b)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Решение", res["decision"].upper()); c2.metric("Схема", res["best"]["scheme"])
     c3.metric("NPV, руб", f"{res['best']['npv_rub']:,}"); c4.metric("$/т Li2CO3", res["best"].get("prod_cost_usd_t"))

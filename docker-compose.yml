@@ -1,9 +1,28 @@
+# BrineValue OS — local advisory screening services.
+# Default bind is loopback. Do NOT publish these ports to the public internet
+# without TLS termination, authentication (BRINEVALUE_API_TOKEN), and a reverse proxy.
 services:
   api:
     build: .
-    command: uvicorn brinevalue.api:app --host 0.0.0.0 --port 8000
-    ports: ["8000:8000"]
+    command: uvicorn brinevalue.api:app --host 127.0.0.1 --port 8000
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      # Set a non-empty token to require X-API-Token / Bearer auth on POST /analyze
+      BRINEVALUE_API_TOKEN: ${BRINEVALUE_API_TOKEN:-}
+    read_only: true
+    tmpfs:
+      - /tmp
   dashboard:
     build: .
-    command: streamlit run brinevalue/dashboard.py --server.port 8501 --server.address 0.0.0.0
-    ports: ["8501:8501"]
+    command: >
+      streamlit run brinevalue/dashboard.py
+      --server.port 8501
+      --server.address 127.0.0.1
+      --server.enableCORS false
+      --server.enableXsrfProtection true
+      --browser.gatherUsageStats false
+    ports: ["127.0.0.1:8501:8501"]
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /home/brinevalue
