@@ -48,6 +48,9 @@ brine, with at least 3 repeat batches per shortlisted scheme;
 ## INDUSTRIX mapping
 - Engineering substance: chemistry, process library, TEA, uncertainty, tests.
 - Practical value: ranked scheme plus action, not an AI score.
-- Novelty: Li/Br/Sr/K/B/I co-product portfolio + experiment selection + local
-Russian-data deployment.
+- Novelty: multi-product screening + greedy lab ranking + robust P(NPV>0) governance
+  (not a digital twin; not Bayesian optimization).
 - Testability: 12-16 week archive-to-lab-to-bench workflow with explicit gates.
+- Code note (v0.5.2): scheme_stability < 0.60 demotes pilot/scale to lab; pilot
+  charge-balance ≤5% remains a contractual pilot gate (code decision_grade ≤10%).
+
