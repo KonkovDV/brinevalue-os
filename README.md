@@ -1,42 +1,138 @@
 # BrineValue OS v0.5.2
 
-Открытый on-prem **инженерный скрининг-инструмент** пластовых/промысловых вод
-(Li, Br, Sr, K, B; йод — tracking без recovery unit). Объяснимые физхим + TEA модели.
-**Не** цифровой двойник, **не** FEED, **не** battery-grade, **не** инвестиционный кейс без цен актива.
+Открытый on-prem проект для акселерационной программы **INDUSTRIX 2026**.
 
-> **Advisory only.** NPV/цены — `screening_placeholder` (`RUB_per_kg_element`).
-> Davies SI decision-grade только при I≤0.5. Данные demo/benchmark — **синтетические**.
-> Governed решение: `no_go` / `lab` / `pilot` (без `scale` при placeholder TEA).
+**Направление:** «Кросс-функциональные решения» — извлечение металлов из попутно добываемой воды на объектах нефтегазодобычи; также подготовка промысловых вод, ресурсная валоризация, технико-экономический анализ и российское ПО.
 
-GitHub: https://github.com/KonkovDV/brinevalue-os · License: Apache-2.0
+**Репозиторий:** https://github.com/KonkovDV/brinevalue-os · **Лицензия:** Apache-2.0
 
-## Одна команда
+---
+
+## Суть решения
+
+BrineValue OS — **локальная инженерная система предварительного отбора** пластовых и попутно добываемых вод для лабораторной проверки извлечения **лития, брома, стронция, калия и бора**.
+
+Йод учитывается в составе воды как потенциальный компонент и может участвовать в расчёте цены, однако **отдельная технологическая операция его извлечения в текущей версии не реализована**.
+
+Система **не является**:
+
+- цифровым двойником;
+- FEED-решением;
+- промышленной системой управления;
+- сертификатом качества продукта;
+- инвестиционной моделью.
+
+Она работает в **рекомендательном режиме** и предназначена для этапа между архивом анализов и расширенной лабораторной программой.
+
+---
+
+## Производственный сценарий
+
+Предварительный отбор потоков пластовой или попутно добываемой воды **перед** лабораторными и стендовыми испытаниями.
+
+**Проблема заказчика:** большое число потоков и технологических вариантов приходится проверять экспериментально до того, как становятся понятны ограничения по составу воды, соотношению Mg/Li, солеотложению, органике, реагентам, энергии, отходам и качеству конечного продукта.
+
+### Потенциальные пользователи
+
+- инженер-технолог;
+- специалист по химии и подготовке воды;
+- руководитель лабораторной или пилотной программы;
+- специалист по технико-экономической оценке;
+- владелец производственного актива, принимающий решение о следующем этапе.
+
+### Предполагаемые входные данные
+
+- концентрации Li, Br, Sr, K, B, I, Na, Ca, Mg, Ba, Cl, SO₄ и HCO₃;
+- дебит и история его изменения;
+- температура и pH;
+- органические примеси;
+- неопределённости аналитических измерений;
+- ограничения существующей инфраструктуры;
+- стоимость реагентов и энергии;
+- требования к конечному продукту;
+- предварительные цены и экономические параметры объекта.
+
+---
+
+## Что реализовано в текущей версии
+
+- проверка входных данных и контроль качества анализа;
+- расчёт ионного баланса и ионной силы;
+- предварительная оценка индексов солеотложения методом Davies в пределах применимости модели;
+- предупреждение о необходимости Pitzer / PHREEQC / Reaktoro для более концентрированных рассолов;
+- сравнение восьми фиксированных технологических сценариев;
+- последовательное обновление состава воды после операций предварительной подготовки;
+- расчёт предварительного извлечения Li, Br, Sr, K и B;
+- компонентный материальный баланс (программный ledger);
+- предварительная оценка CAPEX, OPEX, NPV, окупаемости и стоимости продукта;
+- сценарный анализ цены Li₂CO₃;
+- оценка P(NPV > 0) и устойчивости выбранной схемы при неопределённости состава и дебита;
+- ранжирование дополнительных измерений по ожидаемому снижению разброса NPV;
+- управляемые решения: **не продолжать** / **лаборатория** / **проектирование пилота**;
+- **запрет перехода к масштабированию** при предварительных экономических допущениях;
+- локальное развёртывание: CLI, FastAPI, Streamlit, Docker;
+- импорт CSV / Excel;
+- воспроизводимый HTML-отчёт;
+- документация по ограничениям, безопасности, научным методам и плану валидации.
+
+---
+
+## Проверка зафиксированной версии
+
+На текущем дереве репозитория:
+
+| Проверка | Результат |
+|---|---|
+| Автотесты | **77** (`python run_tests.py`) |
+| Синтетический benchmark | GATES PASS |
+| Adversarial / red-team suite | **0** зарегистрированных отказов |
+| Данные demo / benchmark | **синтетические** |
+
+Результаты подтверждают корректность **программных ограничений и логики обработки**, но **не** являются подтверждением полевой точности моделей.
+
+---
+
+## Важные ограничения
+
+**Экономика.** Предварительная TEA использует допущения по ценам, CAPEX/OPEX, энергии и реагентам (`screening_placeholder`). Результаты — для сравнения вариантов и раннего отсева слабых сценариев, **не** для инвестиционного решения без данных объекта.
+
+**Материальный баланс.** Ledger программно сохраняет связь feed → recovered / removed / residual. Замыкание баланса — свойство реализации, **не** независимое доказательство физической точности. Для пилота нужен измеренный баланс по фактическим потокам.
+
+**Bayesian update.** Диагностический: обновляет оценку извлечения после лабораторных наблюдений, но **не** заменяет автоматически параметры технологической модели и не подменяет лабораторную калибровку.
+
+**Davies SI.** Decision-grade только при I ≤ 0.5 mol/L; иначе — прозрачность + маршрутизация к Pitzer/PHREEQC.
+
+Подробнее: [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md), [`docs/INDUSTRIX_APPLICATION_SYNC_2026_07_23.md`](docs/INDUSTRIX_APPLICATION_SYNC_2026_07_23.md), [`docs/INDUSTRIX_CLAIM_MAP.md`](docs/INDUSTRIX_CLAIM_MAP.md).
+
+---
+
+## Быстрый старт
+
 ```bash
 pip install -e ".[excel]"   # excel optional (openpyxl)
 python -m brinevalue.cli demo --index 0 --report artifacts/demo_report.html
 python -m brinevalue.cli screen data/streams.csv
 python -m benchmark.run_benchmark
 python -m benchmark.redteam
-python run_tests.py          # 77 tests on current tree
+python run_tests.py
 ```
-API: `uvicorn brinevalue.api:app --host 127.0.0.1 --port 8000`  
-UI: `streamlit run brinevalue/dashboard.py`  
-Docker: `docker compose up` (binds **127.0.0.1** only; set `BRINEVALUE_API_TOKEN` for API auth).
-AppSec plan: `docs/SECURITY_REMEDIATION_PLAN_2026_07_23.md`.
-Заявка INDUSTRIX (синхронизация claims): `docs/INDUSTRIX_APPLICATION_SYNC_2026_07_23.md`.
 
-## Конвейер
-QC (баланс) → SI (Davies if I≤0.5) → перебор схем → TEA → P(NPV>0)+stability →
-greedy **measurement** ranking → решение no-go/lab/pilot (governed).
+| Сервис | Команда |
+|---|---|
+| API | `uvicorn brinevalue.api:app --host 127.0.0.1 --port 8000` |
+| UI | `streamlit run brinevalue/dashboard.py` |
+| Docker | `docker compose up` (bind **127.0.0.1**; опционально `BRINEVALUE_API_TOKEN`) |
 
-`recommend()` всегда governed. Сырой NPV = `raw_decision` (может содержать scale).
+Конвейер: QC → SI (Davies) → 8 схем → TEA → P(NPV>0) + stability → ranking измерений → `no_go` / `lab` / `pilot`.
+
+`recommend()` всегда governed. Сырой NPV — в `raw_decision` (может содержать `scale`, но governed его не выдаёт).
+
+AppSec: [`docs/SECURITY_REMEDIATION_PLAN_2026_07_23.md`](docs/SECURITY_REMEDIATION_PLAN_2026_07_23.md).
+
+---
 
 ## Версии
-- **v0.5.2**: INDUSTRIX audit + AppSec harden — NaN guards, HTML SI/XSS escape, evaporation DLE boost,
-  waste ledger, econ validation, scheme_stability gate, governed scale→pilot cap,
-  honest Bayes/DoE/surrogate labels, redteam suite, loopback Docker, optional API token.
-- **v0.5.1**: packaging, governed recommend, Davies gating, stale benchmark.
-- **v0.5.0**: INDUSTRIX readiness layer.
 
-Аудит: `docs/RED_TEAM_FULL_AUDIT_2026_07_23.md`, `docs/INDUSTRIX_AUDIT_REPORT_2026_07_23.md`,
-`docs/INDUSTRIX_CLAIM_MAP.md`.
+- **v0.5.2** — INDUSTRIX claim sync + AppSec harden (XSS, loopback Docker, API bounds/token, scale→pilot cap, honest Bayes/DoE/TEA labels).
+- **v0.5.1** — packaging, governed recommend, Davies gating.
+- **v0.5.0** — INDUSTRIX readiness layer.
