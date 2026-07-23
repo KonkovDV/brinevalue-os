@@ -10,8 +10,9 @@ if st is not None:
     import pandas as pd
     from .io import synthetic_streams
     from .pipeline import analyze
+    from . import __version__
     st.set_page_config(page_title="BrineValue OS", layout="wide")
-    st.title("BrineValue OS v0.5.2 — скрининг пластовых вод (advisory)")
+    st.title(f"BrineValue OS v{__version__} — скрининг пластовых вод (advisory)")
     st.caption(
         "Не цифровой двойник. Не FEED. Не battery-grade. Данные demo — синтетические. "
         "Локальный UI: не публикуйте порт 8501 в интернет."

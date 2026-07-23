@@ -42,8 +42,10 @@ and fit per-unit recovery distributions.
 - mass closure for every unit operation and uncertainty intervals;
 - recovery, selectivity, reagent, energy and waste measured on representative
 brine, with at least 3 repeat batches per shortlisted scheme;
-- no-go if robust P(NPV>0) < 0.75 or if product quality fails the agreed spec;
-- pilot recommendation only if scheme stability >= 0.60 across uncertainty draws.
+- no-go if robust P(NPV>0) < 0.25; if 0.25 ≤ P(NPV>0) < 0.75 then pilot/scale demote to lab;
+  also no-go / demote on QC reject and product quality failures per agreed spec;
+- pilot recommendation only if scheme stability >= 0.60 across uncertainty draws
+  (under screening_placeholder TEA, governed output is capped at pilot, never scale).
 
 ## INDUSTRIX mapping
 - Engineering substance: chemistry, process library, TEA, uncertainty, tests.

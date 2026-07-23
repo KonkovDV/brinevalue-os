@@ -16,7 +16,7 @@ No secrets store, no DB, no outbound integrations.
 | ID | Severity | Finding | Status |
 |----|----------|---------|--------|
 | RT-01 | High | HTML XSS via `brine.name` / meta strings in `report.py` (unescaped interpolation) | **Fixed** |
-| RT-02 | High | Docker Compose bound API/UI to `0.0.0.0` without auth/TLS | **Fixed** (loopback default) |
+| RT-02 | High | Docker Compose bound API/UI to `0.0.0.0` without auth/TLS | **Fixed** (host `127.0.0.1`; in-container `0.0.0.0` for port publish) |
 | RT-03 | High | Unauthenticated `POST /analyze` with unconstrained `ions: dict` | **Fixed** (Pydantic bounds + optional token) |
 | RT-04 | Medium | Container ran as root; full repo `COPY` | **Fixed** (non-root + slim COPY) |
 | RT-05 | Medium | `Brine.validate()` accepted non-numeric strings via hard crash; unknown ions kept | **Fixed** |
@@ -33,7 +33,7 @@ No secrets store, no DB, no outbound integrations.
 2. `brinevalue/chemistry.py` — stricter `validate(strict_species=…)`, concentration/flow/name caps, coerce & drop unknown ions.
 3. `brinevalue/api.py` — bounded `StreamIn`, 422 on bad input, optional `BRINEVALUE_API_TOKEN`, no stack leakage on 500.
 4. `brinevalue/io.py` — numeric parse errors per cell; skip bad rows with warning.
-5. `brinevalue/cli.py` — report parent exists; index/n bounds for demo/surrogate.
+5. `brinevalue/cli.py` — report parent must exist; demo `--index` bounds; surrogate `--n` in [10, 5000].
 6. `Dockerfile` — non-root `brinevalue` user; copy only package + metadata.
 7. `docker-compose.yml` — `127.0.0.1` binds; Streamlit XSRF on / CORS off; optional API token env; read-only FS.
 8. `tests/test_security_redteam.py` — XSS + validation regressions.

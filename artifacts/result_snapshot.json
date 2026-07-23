@@ -35,8 +35,8 @@
   },
   "tea_scenarios": {
     "conservative": {
-      "npv_rub": -132249226,
-      "note": "Li price -40%, discount 18%"
+      "npv_rub": -416968200,
+      "note": "Li price -40%, CAPEX +50%, OPEX +50%, discount 18%"
     },
     "base": {
       "npv_rub": 17280700,

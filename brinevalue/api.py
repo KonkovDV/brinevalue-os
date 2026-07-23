@@ -6,6 +6,7 @@ Optional shared-secret gate: set BRINEVALUE_API_TOKEN and send header
 X-API-Token (or Authorization: Bearer <token>). When unset, no auth
 (local-only trust model — do not expose publicly).
 """
+import hmac
 import os
 from typing import Dict, Optional
 
@@ -20,6 +21,7 @@ if FastAPI is not None:
     from .chemistry import (
         Brine, KNOWN_SPECIES, MAX_FLOW_M3_DAY, MAX_ION_CONC_MG_L, MAX_NAME_LEN,
     )
+    from .io import DEFAULT_REL_UNC
     from .pipeline import analyze
 
     app = FastAPI(
@@ -40,9 +42,12 @@ if FastAPI is not None:
         if authorization and authorization.lower().startswith("bearer "):
             bearer = authorization[7:].strip()
         provided = (x_api_token or bearer or "").strip()
-        if provided != _API_TOKEN:
+        # Hash to fixed length so compare_digest never raises on length mismatch.
+        def _digest(s: str) -> bytes:
+            import hashlib
+            return hashlib.sha256(s.encode("utf-8")).digest()
+        if not hmac.compare_digest(_digest(provided), _digest(_API_TOKEN)):
             raise HTTPException(status_code=401, detail="invalid or missing API token")
-
     class StreamIn(BaseModel):
         ions: Dict[str, float] = Field(default_factory=dict, max_length=32)
         flow: float = Field(default=1000.0, ge=0.0, le=MAX_FLOW_M3_DAY)
@@ -100,7 +105,7 @@ if FastAPI is not None:
         try:
             b = Brine(
                 ions=s.ions, flow=s.flow, temp=s.temp, ph=s.ph, org=s.org, name=s.name,
-                unc={"Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "flow": 0.2},
+                unc=dict(DEFAULT_REL_UNC),
             )
             b.validate(strict_species=True)
         except ValueError as exc:

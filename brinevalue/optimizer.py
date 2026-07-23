@@ -113,6 +113,8 @@ def recommend(brine, prices=None, n_robust=200, seed=42):
         }
     robust = robust_screen(brine, prices, n=n_robust, seed=seed)
     decision, sample_grade = govern_decision(raw_decision, qc, qgate, robust)
+    # Keep nested quality_gate.sample_grade consistent with top-level sample_grade.
+    qgate = {**qgate, "sample_grade": sample_grade}
     return dict(
         decision=decision,
         raw_decision=raw_decision,

@@ -28,7 +28,11 @@ def main():
              rich_not_nogo=rich_ok, doe_reduces_variance=doe_ok,
              surrogate_cv_r2=sur["cv_r2_mean"], surrogate_importances=sur["importances"])
     print(json.dumps(m, ensure_ascii=False, indent=2))
-    ok = poor_nogo and rich_ok and doe_ok and surrogate_ok and sum(decisions.values()) == len(streams)
+    ok = (
+        poor_nogo and rich_ok and doe_ok and surrogate_ok
+        and sum(decisions.values()) == len(streams)
+        and "scale" not in decisions  # governed TEA placeholder never emits scale
+    )
     print("GATES:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 

@@ -19,7 +19,7 @@ def test_lab_calibration_groups():
  r=calibrate_units([{"unit":"dle_sorption_li","ion":"Li","recovery":.8},{"unit":"dle_sorption_li","ion":"Li","recovery":.9}])
  assert "dle_sorption_li::Li" in r
 def test_governance_demotes_bad_qc():
- r=analyze(b(),with_doe=False); assert r["decision"] in {"no_go","lab","pilot","scale"}
+ r=analyze(b(),with_doe=False); assert r["decision"] in {"no_go","lab","pilot"}; assert r["decision"] != "scale"
 
 
 def test_input_validation_negative_and_ranges():

@@ -33,12 +33,15 @@ def test_poor_is_nogo():
     assert recommend(_poor())["decision"] == "no_go"
 
 def test_decision_in_set():
-    assert recommend(_rich())["decision"] in {"no_go", "lab", "pilot", "scale"}
+    d = recommend(_rich())["decision"]
+    assert d in {"no_go", "lab", "pilot"}
+    assert d != "scale"  # governed cap under screening_placeholder TEA
 
 def test_recommend_exposes_governance_fields():
     r = recommend(_rich())
     assert "raw_decision" in r and "sample_grade" in r and "robust" in r
     assert "quality_gate" in r and "si_meta" in r
+    assert r["quality_gate"]["sample_grade"] == r["sample_grade"]
 
 def test_recommend_matches_analyze_decision():
     b = _rich()

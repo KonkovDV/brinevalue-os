@@ -2,9 +2,8 @@
   "n_streams": 24,
   "decisions": {
     "no_go": 16,
-    "pilot": 1,
-    "lab": 6,
-    "scale": 1
+    "pilot": 2,
+    "lab": 6
   },
   "poor_is_nogo": true,
   "rich_not_nogo": true,

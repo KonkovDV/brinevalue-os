@@ -18,8 +18,21 @@ def calibrate_recovery(observations):
 
 
 def apply_correction(flowsheet_recovery, corrections, unit_ion_map=None):
+    """Apply per-(unit, ion) correction factors to overall recovery.
+
+    ``unit_ion_map`` optional ``{ion: unit}`` selects which unit's factor applies
+    when several units could correct the same ion. Without a map, if multiple
+    factors exist for one ion, their **median** is used (avoids stacking).
+    """
     out = dict(flowsheet_recovery)
+    by_ion = {}
     for (unit, ion), f in corrections.items():
-        if ion in out:
-            out[ion] = round(min(1.0, out[ion] * f), 3)
+        if unit_ion_map is not None and unit_ion_map.get(ion) != unit:
+            continue
+        by_ion.setdefault(ion, []).append(float(f))
+    for ion, factors in by_ion.items():
+        if ion not in out:
+            continue
+        factor = factors[0] if len(factors) == 1 else float(np.median(factors))
+        out[ion] = round(min(1.0, out[ion] * factor), 3)
     return out

@@ -3,6 +3,10 @@ import pandas as pd, numpy as np
 from .chemistry import Brine, IONS, NEUTRAL
 
 ALL_SPECIES = list(IONS) + list(NEUTRAL)
+# Shared relative uncertainty defaults (API / CSV / synthetic must match).
+DEFAULT_REL_UNC = {
+    "Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "K": 0.3, "B": 0.3, "flow": 0.2,
+}
 
 
 def _finite_nonneg(value, label, default=None):
@@ -45,7 +49,7 @@ def brine_from_row(row, name="stream"):
         ph=ph,
         org=_finite_nonneg(row.get("org", 0), "org", 0),
         name=str(row["name"]) if "name" in row and pd.notna(row.get("name")) else str(name),
-        unc={"Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "K": 0.3, "B": 0.3, "flow": 0.2},
+        unc=dict(DEFAULT_REL_UNC),
     )
     b.validate(strict_species=True)
     return b
@@ -88,5 +92,5 @@ def synthetic_streams(n=8, seed=0):
                          flow=round(rng.uniform(300, 4000)), temp=round(rng.uniform(20, 80), 1),
                          ph=round(rng.uniform(5.5, 7.5), 2), org=round(rng.uniform(8, 30), 1),
                          name=f"synthetic_{i}",
-                         unc={"Li": 0.3, "Mg": 0.25, "Br": 0.3, "Sr": 0.3, "K": 0.3, "B": 0.3, "flow": 0.2}))
+                         unc=dict(DEFAULT_REL_UNC)))
     return out

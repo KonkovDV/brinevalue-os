@@ -6,9 +6,8 @@ from .report import html_report
 
 
 def _safe_report_path(path):
-    """Resolve report path; refuse writing outside cwd unless absolute path is explicit."""
+    """Resolve report path; require that the parent directory already exists."""
     p = Path(path)
-    # Always resolve; parent dirs must exist or be creatable by open().
     if not p.parent.exists():
         raise SystemExit(f"report directory does not exist: {p.parent}")
     return p

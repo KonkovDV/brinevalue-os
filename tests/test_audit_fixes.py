@@ -76,7 +76,10 @@ def test_posterior_diagnostic_only():
 
 def test_severe_organics_blocks_scale():
     b = _b(org=6000)
-    assert recommend(b, n_robust=40)["decision"] != "scale"
+    r = recommend(b, n_robust=40)
+    assert r["decision"] != "scale"
+    assert r["quality_gate"]["pass"] is False
+    assert "organics_gt_5000_mg_l" in r["quality_gate"]["issues"]
 
 
 def test_governed_never_returns_scale_under_placeholder_tea():

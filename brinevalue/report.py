@@ -1,5 +1,6 @@
 """Explainable HTML report for a single stream (advisory screening)."""
 from html import escape
+from . import __version__
 
 DECISION_RU = {
     "no_go": "NO-GO (не инвестировать)",
@@ -74,7 +75,7 @@ td,th{{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:13px}}
 .badge{{display:inline-block;padding:6px 14px;border-radius:8px;color:#fff;font-weight:700}}
 .scale{{background:#0a4}}.pilot{{background:#2f6fe0}}.lab{{background:#e59b00}}.no_go{{background:#c33}}
 .muted{{color:#666;font-size:13px}}.warn{{background:#fff3cd;padding:10px;border:1px solid #e0c36a}}</style>
-<h1>BrineValue OS <span class=muted>v0.5.2</span></h1>
+<h1>BrineValue OS <span class=muted>v{_e(__version__)}</span></h1>
 <p class="warn"><b>{data_tag}</b> · economics_grade={_e(grade)} · sample_grade={_e(sample)} ·
 advisory screening · НЕ цифровой двойник · НЕ FEED · НЕ battery-grade · IRR не реализован</p>
 <p class=muted>Поток: {stream_name} · дебит {_e(brine.flow)} м3/сут · TDS {_e(f'{brine.tds():.0f}')} мг/л · Mg/Li {_e(res.get('mg_li'))} ·
@@ -89,5 +90,5 @@ simple payback {_e(b.get('simple_payback_yr') or b.get('payback_yr'))} лет</p
 <h3>Сравнение техсхем</h3>
 <table><tr><th>Схема</th><th>Извлечение</th><th>NPV, руб</th><th>CAPEX</th><th>OPEX/год</th><th>$/т Li2CO3</th><th>ROROI</th></tr>{rows}</table>
 {sens_html}{doe_html}
-<p class=muted>BrineValue OS v0.5.2 · Apache-2.0 · intended local deploy ·
+<p class=muted>BrineValue OS v{_e(__version__)} · Apache-2.0 · intended local deploy ·
 Pitzer/PHREEQC required before pilot SI · GitHub: KonkovDV/brinevalue-os</p></html>"""
