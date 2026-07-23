@@ -1,8 +1,10 @@
 """Uncertainty-aware decision layer.
 
-Uses correlated lognormal perturbations for measured concentrations and flow,
+Samples measured concentrations and flow with **independent** lognormal
+perturbations (one multiplier per variable; no cross-ion correlation matrix),
 then reruns the transparent first-principles screen. The output is a decision
 risk report, not a black-box forecast: P(NPV>0), quantiles, and scheme stability.
+Not a full robust project-economics model (CAPEX/OPEX/recovery/prices fixed).
 """
 import copy
 import numpy as np
@@ -35,4 +37,5 @@ def robust_screen(brine, prices=None, n=400, seed=0):
         "npv_p05_rub": int(q[0]), "npv_median_rub": int(q[1]), "npv_p95_rub": int(q[2]),
         "scheme_stability": {str(vals[i]): round(float(counts[i]/n), 3) for i in order},
         "decision_confidence": "high" if (np.mean(x > 0) >= .9 or np.mean(x > 0) <= .1) else "medium",
+        "perturbation": "independent_lognormal_composition_and_flow",
     }

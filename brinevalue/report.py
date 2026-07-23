@@ -4,8 +4,8 @@ from html import escape
 DECISION_RU = {
     "no_go": "NO-GO (не инвестировать)",
     "lab": "ЛАБОРАТОРНАЯ ПРОВЕРКА",
-    "pilot": "ПИЛОТ",
-    "scale": "МАСШТАБИРОВАНИЕ",
+    "pilot": "КАНДИДАТ НА ДИЗАЙН ПИЛОТА",
+    "scale": "МАСШТАБИРОВАНИЕ (только raw NPV; не governed)",
 }
 
 

@@ -28,9 +28,9 @@ See `CHANGELOG.md` v0.5.2. Code + docs + `benchmark/redteam.py` + artifacts.
 ## 4. Actual measured results (this machine)
 | Check | Result |
 |---|---|
-| `python run_tests.py` | **67/67 PASS** (~10–13 s) |
-| `python -m benchmark.run_benchmark` | GATES PASS; typical mix no_go-dominant, scale rare |
-| `python -m benchmark.redteam` | **0 failures** |
+| `python run_tests.py` | **77/77 PASS** (current tree; regenerate claim on tag) |
+| `python -m benchmark.redteam` | **0 failures** (adversarial suite; not “47/47 checks”) |
+| `python -m benchmark.run_benchmark` | GATES PASS; typical mix no_go-dominant; governed `scale` rare/absent |
 | CLI `demo --report` | works (utf-8); decision often `lab` on synthetic |
 | CLI `screen data/streams.csv` | runs; mostly `no_go`/`lab` |
 | Excel import | works with openpyxl → `artifacts/streams_demo.xlsx` |
@@ -42,7 +42,7 @@ All demo streams, benchmark, surrogate CV R², tea_scenarios multipliers, HTML d
 ## 6. Forbidden application claims
 battery-grade · industrial accuracy · full digital twin · Pitzer-in-product · Bayesian optimization · AI black-box ranking · customer NPV without site prices · “13 scale” from stale files · pilot-ready without archive+lab
 
-## 7. Data needed from Gazprom Neft
+## 7. Data needed from customer / INDUSTRIX partner
 Anonymized multi-well ion panels (incl. organics/H2S), flow history, lab ICP/IC QA, offtake prices, site power/reagent costs, downtime, existing pretreatment, product specs, environmental constraints.
 
 ## 8. Readiness

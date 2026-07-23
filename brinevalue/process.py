@@ -185,7 +185,10 @@ def evaluate_flowsheet(b: Brine, units):
             "waste_removed_kg_yr": {k: round(v, 2) for k, v in waste_removed_kg_yr.items()},
             "residual_kg_yr": {k: round(v, 2) for k, v in residual_kg_yr.items()},
             "closure_kg_yr": closure,
-            "note": "algebraic feed=product+waste+residual; not a plant mass-balance certificate",
+            "note": (
+                "algebraic ledger invariant: feed ≈ recovered + waste_removed + residual; "
+                "near-zero closure proves bookkeeping, NOT independent physical model accuracy"
+            ),
         },
         notes=notes,
         evidence_grade="screening_synthetic",

@@ -38,10 +38,17 @@ def annual_product_kg(brine, flowsheet):
     return out
 
 
-def economics(brine, flowsheet, prices=None, discount=0.15, years=10):
+def economics(brine, flowsheet, prices=None, discount=0.15, years=10,
+              capex_factor=1.0, opex_factor=1.0):
     _validate_tea_inputs(prices, discount, years)
     years = int(years)
     discount = float(discount)
+    capex_factor = float(capex_factor)
+    opex_factor = float(opex_factor)
+    if not math.isfinite(capex_factor) or capex_factor <= 0:
+        raise ValueError("capex_factor must be finite and > 0")
+    if not math.isfinite(opex_factor) or opex_factor <= 0:
+        raise ValueError("opex_factor must be finite and > 0")
     p = {**PRODUCT_PRICE, **(prices or {})}
     for k, v in p.items():
         if v is None or not math.isfinite(float(v)) or float(v) < 0:
@@ -56,8 +63,8 @@ def economics(brine, flowsheet, prices=None, discount=0.15, years=10):
         flowsheet["reagent_kg_per_m3"] * REAGENT_PRICE
         + flowsheet["kwh_per_m3"] * ENERGY_PRICE
         + PROCESS_COST_FLOOR_RUB_M3
-    ) * vol_yr
-    capex = (6.0e7 + 3.0e4 * (vol_yr ** 0.7)) * (0.6 + 0.05 * len(flowsheet["units"]))
+    ) * vol_yr * opex_factor
+    capex = (6.0e7 + 3.0e4 * (vol_yr ** 0.7)) * (0.6 + 0.05 * len(flowsheet["units"])) * capex_factor
     if not math.isfinite(capex) or capex < 0:
         raise ValueError("CAPEX calculation produced invalid value")
     net_yr = revenue - opex
@@ -96,6 +103,8 @@ def economics(brine, flowsheet, prices=None, discount=0.15, years=10):
             "discount": discount,
             "years": years,
             "process_cost_floor_rub_m3": PROCESS_COST_FLOOR_RUB_M3,
+            "capex_factor": capex_factor,
+            "opex_factor": opex_factor,
             "inflation": "none",
             "tax_logistics": "none",
             "lab_validation_cost": "not_in_model",
@@ -116,14 +125,20 @@ def price_scenarios(brine, flowsheet, scenarios=None):
 def tea_scenarios(brine, flowsheet):
     """Conservative / base / optimistic screening overlays (synthetic multipliers)."""
     base = economics(brine, flowsheet)
-    # Conservative: -40% Li price, +50% CAPEX/OPEX via price and floor proxy
+    # Conservative: -40% Li price, +50% CAPEX, +50% OPEX, higher discount
     cons_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 0.6}
-    cons = economics(brine, flowsheet, prices=cons_prices, discount=0.18)
+    cons = economics(
+        brine, flowsheet, prices=cons_prices, discount=0.18,
+        capex_factor=1.5, opex_factor=1.5,
+    )
     # Optimistic: +30% Li price, lower discount
     opt_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 1.3}
     opt = economics(brine, flowsheet, prices=opt_prices, discount=0.12)
     return {
-        "conservative": {"npv_rub": cons["npv_rub"], "note": "Li price -40%, discount 18%"},
+        "conservative": {
+            "npv_rub": cons["npv_rub"],
+            "note": "Li price -40%, CAPEX +50%, OPEX +50%, discount 18%",
+        },
         "base": {"npv_rub": base["npv_rub"], "note": "default placeholders"},
         "optimistic": {"npv_rub": opt["npv_rub"], "note": "Li price +30%, discount 12%"},
         "evidence_grade": "synthetic_screening",

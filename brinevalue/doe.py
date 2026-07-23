@@ -1,9 +1,10 @@
-"""Greedy uncertainty-reduction experiment ranking (NOT Bayesian optimization).
+"""Greedy uncertainty-reduction measurement ranking (NOT Bayesian optimization,
+NOT a process batch DoE for sorption/regeneration/product quality).
 
 Propagates input uncertainty to NPV by Monte Carlo, then greedily picks
-experiments (each collapses one input's sigma) that maximally reduce NPV
-variance. Explainable; no acquisition function / no posterior over policies.
-For Beta lab posteriors see bayes.py (diagnostic unless explicitly applied).
+which **input measurement** (each collapses one input's sigma) most reduces
+NPV standard deviation. Explainable; no acquisition function / no posterior
+over policies. For Beta lab posteriors see bayes.py (diagnostic unless applied).
 """
 import copy
 import numpy as np
@@ -50,12 +51,15 @@ def propose_experiments(brine, prices=None, k=4, n=150, seed=0):
             if best is None or s < best[1]:
                 best = (cand, s)
         cand, s = best
+        std_reduction = round(cur - s)
         plan.append(
             dict(
                 experiment=EXPERIMENT[cand],
                 target=cand,
                 npv_std_after=round(s),
-                variance_reduction_rub=round(cur - s),
+                npv_std_reduction_rub=std_reduction,
+                # Deprecated alias (was misnamed: value is std reduction, not variance).
+                variance_reduction_rub=std_reduction,
             )
         )
         chosen.append(cand)
@@ -64,7 +68,11 @@ def propose_experiments(brine, prices=None, k=4, n=150, seed=0):
     return dict(
         method="greedy_uncertainty_reduction",
         bayesian_optimization=False,
+        process_batch_doe=False,
         base_npv_std=round(base),
         plan=plan,
-        note="Not Bayesian optimization; ranks which lab measurement most reduces NPV std",
+        note=(
+            "Not Bayesian optimization and not process batch DoE; "
+            "ranks which additional feed measurement most reduces NPV std"
+        ),
     )

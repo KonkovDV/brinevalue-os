@@ -36,7 +36,7 @@ def assess(x=None):
     blockers = []
     if not x.has_real_data: blockers.append("нет обезличенного промышленного архива")
     if not x.has_lab_validation: blockers.append("нет повторных лабораторных опытов")
-    if not x.has_mass_balance: blockers.append("нет component mass-balance")
+    if not x.has_mass_balance: blockers.append("нет component mass-balance ledger")
     if not x.has_measurable_kpi: blockers.append("нет KPI и baseline")
     readiness = round(sum(scores.values()) / len(scores), 1)
     return {
@@ -45,6 +45,10 @@ def assess(x=None):
         "blockers": blockers,
         "honest_stage": "screening+lab-design" if blockers else "pilot-ready",
         "scores_are_heuristics": True,
+        "mass_balance_note": (
+            "has_mass_balance means algebraic component ledger exists; "
+            "near-zero closure is a software invariant, not field validation"
+        ),
         "note": "Scores are checklist heuristics for readiness discussion, not INDUSTRIX selection proof.",
     }
 

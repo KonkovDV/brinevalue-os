@@ -26,7 +26,8 @@
 
 ## Acceptance gates
 1. Input validation passes (incl. NaN/Inf).
-2. Component mass-balance closure is <= 1e-6 kg/y in synthetic chains.
+2. Component mass-ledger closure is ~0 by construction (algebraic invariant), not a
+   physics-accuracy certificate. Pilot KPI must use measured streams.
 3. No recovery exceeds feed mass.
 4. NPV is monotone in Li2CO3 price.
 5. Revenue ledger closes to displayed production values.

@@ -77,3 +77,18 @@ def test_posterior_diagnostic_only():
 def test_severe_organics_blocks_scale():
     b = _b(org=6000)
     assert recommend(b, n_robust=40)["decision"] != "scale"
+
+
+def test_governed_never_returns_scale_under_placeholder_tea():
+    """Even rich streams: governed decision capped at pilot while TEA is placeholder."""
+    b = _b()
+    r = recommend(b, n_robust=40)
+    assert r["decision"] in {"no_go", "lab", "pilot"}
+    assert r["decision"] != "scale"
+    assert "decision_note" in r
+
+
+def test_doe_reports_std_reduction_field():
+    plan = propose_experiments(_b(), k=2, n=40)
+    assert plan["process_batch_doe"] is False
+    assert "npv_std_reduction_rub" in plan["plan"][0]

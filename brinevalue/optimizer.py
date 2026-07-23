@@ -19,6 +19,8 @@ CANDIDATES = {
         "electrochemical_br", "k_recovery", "b_recovery", "precipitation_sr", "li_carbonate_finish",
     ],
 }
+# FullComponent: multi-product screening chain via NF Li passage + finish;
+# not a complete industrial multi-DLE topology (no dedicated Li-selective extraction unit).
 
 SCHEME_STABILITY_MIN = 0.60
 
@@ -54,7 +56,12 @@ def _npv_decision(npv: float) -> str:
 
 
 def govern_decision(raw_decision, qc, qgate, robust):
-    """Map NPV-raw decision through sample QC, P(NPV>0), and scheme stability."""
+    """Map NPV-raw decision through sample QC, P(NPV>0), and scheme stability.
+
+    Under screening_placeholder TEA, governed output never returns ``scale``:
+    high NPV maps at most to ``pilot`` (candidate for pilot *design*), not
+    investment-grade scale-up authorization.
+    """
     decision = raw_decision
     bal = qc.get("balance_error_pct")
     bal_f = float(bal) if bal is not None else 999.0
@@ -77,6 +84,9 @@ def govern_decision(raw_decision, qc, qgate, robust):
     if top_share < SCHEME_STABILITY_MIN and decision in ("pilot", "scale"):
         decision = "lab"
         sample_grade = "non_decision_grade" if sample_grade == "decision_grade" else sample_grade
+    # Placeholder TEA must not authorize industrial scale-up.
+    if decision == "scale":
+        decision = "pilot"
     return decision, sample_grade
 
 
@@ -118,4 +128,8 @@ def recommend(brine, prices=None, n_robust=200, seed=42):
         si_meta=si_meta,
         tea_scenarios=tea_scenarios(brine, best),
         selection_note="best = max NPV on Pareto front; decision still governed by QC+P(NPV>0)+stability",
+        decision_note=(
+            "governed decision capped at pilot under screening_placeholder TEA; "
+            "raw_decision may still show scale from NPV thresholds alone"
+        ),
     )

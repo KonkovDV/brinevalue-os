@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use BrineValue OS, please cite it as below."
+title: "BrineValue OS"
+version: 0.5.2
+date-released: "2026-07-23"
+license: Apache-2.0
+repository-code: "https://github.com/KonkovDV/brinevalue-os"
+abstract: >
+  On-prem advisory screening tool for formation/produced water recovery of
+  Li, Br, Sr, K and B. Not a digital twin; screening-grade TEA and QC only.
+authors:
+  - family-names: Konkov
+    given-names: D. V.
+    website: "https://github.com/KonkovDV"
