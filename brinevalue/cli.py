@@ -14,7 +14,7 @@ def cmd_demo(a):
     print("TOP SENSITIVITY:", list(res["sensitivity"]["elasticity"].items())[:3])
     print("EXPERIMENT PLAN:", [e["experiment"] for e in res["experiment_plan"]["plan"]])
     if a.report:
-        open(a.report, "w").write(html_report(res, b, res["sensitivity"], res["experiment_plan"]))
+        open(a.report, "w", encoding="utf-8").write(html_report(res, b, res["sensitivity"], res["experiment_plan"]))
         print("report ->", a.report)
 
 

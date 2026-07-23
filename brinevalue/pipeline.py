@@ -14,6 +14,7 @@ def analyze(brine, prices=None, with_doe=True, with_scenarios=True, lab_observat
     industrix = assess_industrix()
     out = dict(
         stream=brine.name,
+        evidence_grade="synthetic" if "synthetic" in str(brine.name).lower() else "user_input_unscreened",
         qc=rec["qc"],
         mg_li=round(mg_li_ratio(brine), 2),
         scaling_index=rec["scaling_index"],
@@ -23,12 +24,14 @@ def analyze(brine, prices=None, with_doe=True, with_scenarios=True, lab_observat
         robust=rec["robust"],
         sample_grade=rec["sample_grade"],
         posterior=posterior,
+        posterior_role="diagnostic_only_not_applied_to_tea",
         industrix=industrix,
         decision=rec["decision"],
         raw_decision=rec["raw_decision"],
         best=rec["best"],
         pareto=rec["pareto"],
         ranked=rec["ranked"],
+        tea_scenarios=rec.get("tea_scenarios"),
         sensitivity=sensitivity(brine, prices),
     )
     if with_doe:

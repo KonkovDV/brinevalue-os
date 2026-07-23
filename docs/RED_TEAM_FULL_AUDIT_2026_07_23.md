@@ -1,7 +1,8 @@
 # Red Team full audit — BrineValue OS
 
 **Дата аудита:** 2026-07-23 (v0.5.0)  
-**Ремедиация:** 2026-07-23 → **v0.5.1**  
+**Ремедиация:** 2026-07-23 → **v0.5.1**; полный INDUSTRIX-аудит → **v0.5.2**  
+См. `docs/INDUSTRIX_AUDIT_REPORT_2026_07_23.md` и `CHANGELOG.md`.  
 **Объект:** `C:\plans\Industrix\brinevalue`  
 **Метод:** код + `run_tests.py` + `benchmark.run_benchmark` + adversarial прогоны.  
 **Не полевой отчёт.**

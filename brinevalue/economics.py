@@ -1,16 +1,12 @@
-"""Techno-economic model with the metrics investors actually use.
+"""Techno-economic screening model (placeholders, not offtake quotes).
 
-Upgrade v0.2.0:
-- Adds ROROI and production cost per tonne Li2CO3-equivalent ($/t), the decision
-  metric in DLE TEAs (Nikfar et al. ACS 2026; Salton Sea Nature Commun. 2026
-  benchmark: ~$10,000-22,000/t). Li -> Li2CO3 factor 5.323 (MW 73.89/13.88).
-- Adds K, B, I product prices and a Li2CO3 price-scenario sweep
-  (11 scenarios in Nikfar 2026). Treatment cost is 5-15% of production cost
-  (Chen et al. DWT 2025), used as a sanity band.
-Defaults are screening estimates, all overridable. Frozen in docs/ECONOMICS.md.
+Metrics: NPV, undiscounted ROROI, simple payback. No IRR solver.
+prod_cost_usd_t is Li-allocated (co-product revenue NOT credited) — labeled.
+Defaults frozen in docs/ECONOMICS.md. economics_grade=screening_placeholder.
 """
+import math
+
 PRODUCT_PRICE = {"Li": 5500.0, "Br": 260.0, "Sr": 180.0, "K": 60.0, "B": 400.0, "I": 3000.0}
-# Explicit unit for PRODUCT_PRICE keys (screening placeholders, not offtake quotes).
 PRICE_UNIT = "RUB_per_kg_element"
 REAGENT_PRICE = 45.0
 ENERGY_PRICE = 6.5
@@ -18,60 +14,117 @@ DAYS = 330
 FX_RUB_USD = 90.0
 LI_TO_LI2CO3 = 5.323
 LI2CO3_PRICE_SCENARIOS_USD_T = [8000, 10000, 12000, 15000, 18000, 20000, 22000, 25000, 30000, 40000, 50000]
-# All-in processing cost floor beyond explicit reagent/energy (labour, membranes,
-# sorbent replacement, waste, maintenance). Calibrated so a typical Li~150 mg/L
-# stream lands in the Salton Sea benchmark band (~$10-22k/t Li2CO3).
 PROCESS_COST_FLOOR_RUB_M3 = 320.0
+
+
+def _validate_tea_inputs(prices, discount, years):
+    if years is None or not math.isfinite(float(years)) or int(years) < 1:
+        raise ValueError("years must be >= 1")
+    if discount is None or not math.isfinite(float(discount)) or not (0.0 < float(discount) < 1.0):
+        raise ValueError("discount must be in (0,1)")
+    for k, v in (prices or {}).items():
+        if v is None or not math.isfinite(float(v)) or float(v) < 0:
+            raise ValueError(f"price for {k} must be finite and >= 0")
 
 
 def annual_product_kg(brine, flowsheet):
     out = {}
     for ion, rec in flowsheet["recovery"].items():
+        rec = float(rec)
+        if not math.isfinite(rec) or rec < 0 or rec > 1:
+            raise ValueError(f"recovery for {ion} must be in [0,1], got {rec}")
         mg_per_l = brine.ions.get(ion, 0.0)
         out[ion] = mg_per_l * (brine.flow * 1000.0) * rec * DAYS / 1e6  # kg/yr
     return out
 
 
 def economics(brine, flowsheet, prices=None, discount=0.15, years=10):
+    _validate_tea_inputs(prices, discount, years)
+    years = int(years)
+    discount = float(discount)
     p = {**PRODUCT_PRICE, **(prices or {})}
+    for k, v in p.items():
+        if v is None or not math.isfinite(float(v)) or float(v) < 0:
+            raise ValueError(f"default/override price for {k} invalid")
     vol_yr = brine.flow * DAYS
     brine.validate()
     prod_raw = annual_product_kg(brine, flowsheet)
-    # Reported production values are rounded to 6 decimals and the revenue is
-    # calculated from the same displayed values, preventing audit drift.
     prod = {k: round(v, 6) for k, v in prod_raw.items()}
     revenue_components = {i: prod[i] * p.get(i, 0.0) for i in prod}
     revenue = sum(revenue_components.values())
-    opex = (flowsheet["reagent_kg_per_m3"] * REAGENT_PRICE
-            + flowsheet["kwh_per_m3"] * ENERGY_PRICE
-            + PROCESS_COST_FLOOR_RUB_M3) * vol_yr
-    # capex with economies of scale on throughput + unit-count complexity;
-    # calibrated to realistic DLE plant costs (see docs/ECONOMICS.md)
+    opex = (
+        flowsheet["reagent_kg_per_m3"] * REAGENT_PRICE
+        + flowsheet["kwh_per_m3"] * ENERGY_PRICE
+        + PROCESS_COST_FLOOR_RUB_M3
+    ) * vol_yr
     capex = (6.0e7 + 3.0e4 * (vol_yr ** 0.7)) * (0.6 + 0.05 * len(flowsheet["units"]))
+    if not math.isfinite(capex) or capex < 0:
+        raise ValueError("CAPEX calculation produced invalid value")
     net_yr = revenue - opex
     npv = -capex + sum(net_yr / (1 + discount) ** t for t in range(1, years + 1))
     roroi = (net_yr * years - capex) / capex if capex else None
-    # production cost per tonne Li2CO3-equivalent (USD/t) if Li is recovered
-    li_kg = prod.get("Li", 0.0); li2co3_t = li_kg * LI_TO_LI2CO3 / 1000.0
+    li_kg = prod.get("Li", 0.0)
+    li2co3_t = li_kg * LI_TO_LI2CO3 / 1000.0
     annualized_capex = capex * discount / (1 - (1 + discount) ** -years)
     prod_cost_usd_t = ((opex + annualized_capex) / FX_RUB_USD / li2co3_t) if li2co3_t > 0 else None
-    return dict(revenue_rub_yr=round(revenue), opex_rub_yr=round(opex),
-                capex_rub=round(capex), net_rub_yr=round(net_yr), npv_rub=round(npv),
-                roroi=round(roroi, 2) if roroi is not None else None,
-                li2co3_t_yr=round(li2co3_t, 1),
-                prod_cost_usd_t=round(prod_cost_usd_t) if prod_cost_usd_t else None,
-                product_kg_yr=prod,
-                revenue_components_rub_yr={k: round(v, 2) for k, v in revenue_components.items()},
-                price_unit=PRICE_UNIT,
-                economics_grade="screening_placeholder",
-                payback_yr=round(capex / net_yr, 2) if net_yr > 0 else None)
+    co_product_rev = sum(v for k, v in revenue_components.items() if k != "Li")
+    net_prod_cost_usd_t = None
+    if li2co3_t > 0:
+        net_prod_cost_usd_t = ((opex + annualized_capex - co_product_rev) / FX_RUB_USD / li2co3_t)
+    return dict(
+        revenue_rub_yr=round(revenue),
+        opex_rub_yr=round(opex),
+        capex_rub=round(capex),
+        net_rub_yr=round(net_yr),
+        npv_rub=round(npv),
+        roroi=round(roroi, 2) if roroi is not None else None,
+        roroi_definition="undiscounted (net_yr*years - capex)/capex — not IRR",
+        li2co3_t_yr=round(li2co3_t, 1),
+        prod_cost_usd_t=round(prod_cost_usd_t) if prod_cost_usd_t is not None else None,
+        prod_cost_basis="li_allocated_no_coproduct_credit",
+        prod_cost_net_of_coproducts_usd_t=round(net_prod_cost_usd_t) if net_prod_cost_usd_t is not None else None,
+        product_kg_yr=prod,
+        revenue_components_rub_yr={k: round(v, 2) for k, v in revenue_components.items()},
+        price_unit=PRICE_UNIT,
+        economics_grade="screening_placeholder",
+        simple_payback_yr=round(capex / net_yr, 2) if net_yr > 0 else None,
+        payback_yr=round(capex / net_yr, 2) if net_yr > 0 else None,  # alias; undiscounted
+        irr="not_implemented",
+        assumptions={
+            "days_per_year": DAYS,
+            "fx_rub_usd": FX_RUB_USD,
+            "discount": discount,
+            "years": years,
+            "process_cost_floor_rub_m3": PROCESS_COST_FLOOR_RUB_M3,
+            "inflation": "none",
+            "tax_logistics": "none",
+            "lab_validation_cost": "not_in_model",
+        },
+    )
 
 
 def price_scenarios(brine, flowsheet, scenarios=None):
-    """NPV vs Li2CO3 price. Returns list of (usd_per_t, npv_rub)."""
+    """NPV vs Li2CO3 price. Returns list of {usd_per_t, npv_rub}."""
     out = []
     for usd_t in (scenarios or LI2CO3_PRICE_SCENARIOS_USD_T):
         li_price_rub_kg = usd_t / LI_TO_LI2CO3 * FX_RUB_USD / 1000.0
         ec = economics(brine, flowsheet, prices={"Li": li_price_rub_kg})
         out.append(dict(li2co3_usd_t=usd_t, npv_rub=ec["npv_rub"]))
     return out
+
+
+def tea_scenarios(brine, flowsheet):
+    """Conservative / base / optimistic screening overlays (synthetic multipliers)."""
+    base = economics(brine, flowsheet)
+    # Conservative: -40% Li price, +50% CAPEX/OPEX via price and floor proxy
+    cons_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 0.6}
+    cons = economics(brine, flowsheet, prices=cons_prices, discount=0.18)
+    # Optimistic: +30% Li price, lower discount
+    opt_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 1.3}
+    opt = economics(brine, flowsheet, prices=opt_prices, discount=0.12)
+    return {
+        "conservative": {"npv_rub": cons["npv_rub"], "note": "Li price -40%, discount 18%"},
+        "base": {"npv_rub": base["npv_rub"], "note": "default placeholders"},
+        "optimistic": {"npv_rub": opt["npv_rub"], "note": "Li price +30%, discount 12%"},
+        "evidence_grade": "synthetic_screening",
+    }

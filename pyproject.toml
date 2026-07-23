@@ -1,6 +1,6 @@
 [project]
 name = "brinevalue-os"
-version = "0.5.1"
+version = "0.5.2"
 description = "Open on-prem screening tool for formation/produced water recovery of Li, Br, Sr and co-products (advisory, lab validation required)."
 readme = "README.md"
 requires-python = ">=3.10"

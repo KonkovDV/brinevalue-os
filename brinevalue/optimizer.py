@@ -20,6 +20,8 @@ CANDIDATES = {
     ],
 }
 
+SCHEME_STABILITY_MIN = 0.60
+
 
 def screen(brine, prices=None):
     rows = []
@@ -52,14 +54,13 @@ def _npv_decision(npv: float) -> str:
 
 
 def govern_decision(raw_decision, qc, qgate, robust):
-    """Map NPV-raw decision through sample QC and P(NPV>0)."""
+    """Map NPV-raw decision through sample QC, P(NPV>0), and scheme stability."""
     decision = raw_decision
-    bal = float(qc.get("balance_error_pct", 0.0))
-    # >25%: sample not usable for screening decisions
-    if qc.get("reject_sample") or bal > 25.0:
+    bal = qc.get("balance_error_pct")
+    bal_f = float(bal) if bal is not None else 999.0
+    if qc.get("reject_sample") or bal_f > 25.0:
         return "no_go", "non_decision_grade"
-    # >10% or QC issues: cannot pilot/scale
-    if bal > 10.0 or not qgate.get("pass", False):
+    if bal_f > 10.0 or not qgate.get("pass", False):
         if decision in ("pilot", "scale", "lab"):
             decision = "lab"
         sample_grade = "non_decision_grade"
@@ -70,18 +71,26 @@ def govern_decision(raw_decision, qc, qgate, robust):
         decision = "no_go"
     elif p < 0.75 and decision in ("pilot", "scale"):
         decision = "lab"
+    # Scheme instability: do not pilot/scale if best scheme flips often
+    stab = robust.get("scheme_stability") or {}
+    top_share = max(stab.values()) if stab else 1.0
+    if top_share < SCHEME_STABILITY_MIN and decision in ("pilot", "scale"):
+        decision = "lab"
+        sample_grade = "non_decision_grade" if sample_grade == "decision_grade" else sample_grade
     return decision, sample_grade
 
 
 def recommend(brine, prices=None, n_robust=200, seed=42):
     """Governed recommendation (advisory). Always prefer this over NPV-only logic."""
-    # Lazy imports avoid circular import with uncertainty -> screen.
     from .chemistry import ionic_balance, scaling_risk
     from .quality import quality_gate
     from .uncertainty import robust_screen
+    from .economics import tea_scenarios
 
     rows = screen(brine, prices)
-    best = rows[0]
+    pareto = pareto_front(rows)
+    # Prefer highest-NPV Pareto member when available; else overall NPV rank.
+    best = max(pareto, key=lambda r: r["npv_rub"]) if pareto else rows[0]
     raw_decision = _npv_decision(best["npv_rub"])
     qc = ionic_balance(brine)
     si, flags, si_meta = scaling_risk(brine)
@@ -99,7 +108,7 @@ def recommend(brine, prices=None, n_robust=200, seed=42):
         raw_decision=raw_decision,
         sample_grade=sample_grade,
         best=best,
-        pareto=pareto_front(rows),
+        pareto=pareto,
         ranked=rows,
         qc=qc,
         quality_gate=qgate,
@@ -107,4 +116,6 @@ def recommend(brine, prices=None, n_robust=200, seed=42):
         scaling_index=si,
         scaling_risk=flags,
         si_meta=si_meta,
+        tea_scenarios=tea_scenarios(brine, best),
+        selection_note="best = max NPV on Pareto front; decision still governed by QC+P(NPV>0)+stability",
     )

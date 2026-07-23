@@ -1,0 +1,25 @@
+<!doctype html><html lang=ru><meta charset=utf-8>
+<title>BrineValue OS - synthetic_0</title>
+<style>body{font-family:system-ui,Arial;margin:40px;color:#111;max-width:1000px}
+h1{margin:0}table{border-collapse:collapse;width:100%;margin:16px 0}
+td,th{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:13px}
+.badge{display:inline-block;padding:6px 14px;border-radius:8px;color:#fff;font-weight:700}
+.scale{background:#0a4}.pilot{background:#2f6fe0}.lab{background:#e59b00}.no_go{background:#c33}
+.muted{color:#666;font-size:13px}.warn{background:#fff3cd;padding:10px;border:1px solid #e0c36a}</style>
+<h1>BrineValue OS <span class=muted>v0.5.2</span></h1>
+<p class="warn"><b>СИНТЕТИЧЕСКИЕ ДАННЫЕ</b> · economics_grade=screening_placeholder · sample_grade=non_decision_grade ·
+advisory screening · НЕ цифровой двойник · НЕ FEED · НЕ battery-grade · IRR не реализован</p>
+<p class=muted>Поток: synthetic_0 · дебит 424 м3/сут · TDS 157904 мг/л · Mg/Li 0.65 ·
+Ksp при 25°C (T brine=63.8°C не корректирует SI)</p>
+<p>Решение: <span class="badge lab">ЛАБОРАТОРНАЯ ПРОВЕРКА</span>
+<span class=muted>(raw NPV: lab)</span></p>
+<p>Лучшая схема (Pareto/NPV): <b>Li_membrane</b>, NPV 17 280 700 руб,
+себестоимость Li-allocated 19294 $/т Li2CO3,
+simple payback 4.51 лет</p>
+<p class=muted>Цепочка: desulfurization -> softening -> nf_membrane -> ro_concentration -> li_carbonate_finish</p>
+<h3>Риски солеотложения (Davies SI; decision-grade только при I≤0.5)</h3><ul><li>CaCO3: SI=n/a (не decision-grade; I&gt;0.5 или модель вне области)</li><li>CaSO4: SI=n/a (не decision-grade; I&gt;0.5 или модель вне области)</li><li>BaSO4: SI=n/a (не decision-grade; I&gt;0.5 или модель вне области)</li><li>SrSO4: SI=n/a (не decision-grade; I&gt;0.5 или модель вне области)</li><li>Halite: SI=n/a (не decision-grade; I&gt;0.5 или модель вне области)</li><li class=muted>transparency (не для решений): CaCO3=1.73, CaSO4=2.47, BaSO4=6.27, SrSO4=3.77, Halite=-0.66</li><li class=muted>I=2.69 > 0.5: SI not decision-grade; use Pitzer/PHREEQC before pilot</li></ul>
+<h3>Сравнение техсхем</h3>
+<table><tr><th>Схема</th><th>Извлечение</th><th>NPV, руб</th><th>CAPEX</th><th>OPEX/год</th><th>$/т Li2CO3</th><th>ROROI</th></tr><tr><td>Li_membrane</td><td>{'Li': 0.737, 'Br': 0.712, 'B': 0.6, 'Sr': 0.95, 'K': 0.95}</td><td>17 280 700</td><td>153 013 122</td><td>92 660 621</td><td>19294</td><td>1.22</td></tr><tr><td>Li_electro</td><td>{'Li': 0.825}</td><td>-12 453 800</td><td>144 012 350</td><td>55 814 088</td><td>11828</td><td>0.82</td></tr><tr><td>FullComponent</td><td>{'Li': 0.776, 'Br': 0.675, 'B': 0.45, 'K': 0.7, 'Sr': 0.8}</td><td>-114 877 143</td><td>189 016 209</td><td>105 974 009</td><td>21373</td><td>-0.22</td></tr><tr><td>Li_sorption</td><td>{'Li': 0.873}</td><td>-153 272 044</td><td>144 012 350</td><td>88 644 917</td><td>15520</td><td>-1.13</td></tr><tr><td>LiBr_combo</td><td>{'Li': 0.776, 'Br': 0.675, 'B': 0.6}</td><td>-167 112 979</td><td>153 013 122</td><td>88 595 245</td><td>17719</td><td>-1.18</td></tr><tr><td>Li_solvent</td><td>{'Li': 0.854}</td><td>-176 727 379</td><td>144 012 350</td><td>91 429 325</td><td>16242</td><td>-1.45</td></tr><tr><td>Br_electro</td><td>{'Br': 0.9}</td><td>-326 995 783</td><td>126 010 806</td><td>47 027 112</td><td>-</td><td>-4.18</td></tr><tr><td>Sr_precip</td><td>{'Sr': 0.8}</td><td>-432 042 828</td><td>135 011 578</td><td>83 950 601</td><td>-</td><td>-5.38</td></tr></table>
+<h3>Чувствительность NPV (эластичность, one-at-a-time)</h3><ul><li>Li: 21.282</li><li>Sr: 8.528</li><li>flow: 5.837</li><li>K: 4.326</li><li>Br: 1.604</li><li>Mg: -1.335</li><li>B: 0.986</li></ul><h3>План лабораторных опытов (greedy_uncertainty_reduction)</h3><ol><li>Точный анализ Li (ICP-MS) → ↓шум NPV до 42 042 254 руб</li><li>Анализ Sr → ↓шум NPV до 30 094 058 руб</li><li>Замер дебита потока → ↓шум NPV до 22 829 556 руб</li><li>Анализ K → ↓шум NPV до 11 012 651 руб</li></ol>
+<p class=muted>BrineValue OS v0.5.2 · Apache-2.0 · intended local deploy ·
+Pitzer/PHREEQC required before pilot SI · GitHub: KonkovDV/brinevalue-os</p></html>

@@ -8,8 +8,8 @@ if st is not None:
     from .io import synthetic_streams
     from .pipeline import analyze
     st.set_page_config(page_title="BrineValue OS", layout="wide")
-    st.title("BrineValue OS v0.5 — скрининг пластовых вод (advisory)")
-    st.caption("Не цифровой двойник. Не FEED. Требует лабораторной валидации.")
+    st.title("BrineValue OS v0.5.2 — скрининг пластовых вод (advisory)")
+    st.caption("Не цифровой двойник. Не FEED. Не battery-grade. Данные demo — синтетические.")
     streams = synthetic_streams(8)
     idx = st.selectbox("Поток", range(len(streams)), format_func=lambda i: streams[i].name)
     b = streams[idx]; res = analyze(b)

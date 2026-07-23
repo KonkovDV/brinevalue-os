@@ -1,0 +1,53 @@
+{
+  "version": "0.5.2",
+  "stream": "synthetic_0",
+  "decision": "lab",
+  "raw_decision": "lab",
+  "sample_grade": "non_decision_grade",
+  "qc": {
+    "cations_eq": 2.10039,
+    "anions_eq": 3.04112,
+    "ionic_strength": 2.695,
+    "balance_error_pct": 18.3,
+    "acceptable": false,
+    "decision_grade": false,
+    "reject_sample": false,
+    "density_assumption": "mg/L treated as approx. mol/L at density~1 kg/L (screening)"
+  },
+  "si_meta": {
+    "ionic_strength": 2.695,
+    "si_reliable": false,
+    "activity_model": "davies_out_of_range",
+    "ksp_reference_temp_c": 25.0
+  },
+  "best_scheme": "Li_membrane",
+  "npv": 17280700,
+  "economics_grade": "screening_placeholder",
+  "robust": {
+    "p_npv_positive": 0.495,
+    "npv_p05_rub": -151129938,
+    "npv_median_rub": -1089453,
+    "npv_p95_rub": 262295597,
+    "scheme_stability": {
+      "Li_membrane": 0.68,
+      "Li_electro": 0.32
+    }
+  },
+  "tea_scenarios": {
+    "conservative": {
+      "npv_rub": -132249226,
+      "note": "Li price -40%, discount 18%"
+    },
+    "base": {
+      "npv_rub": 17280700,
+      "note": "default placeholders"
+    },
+    "optimistic": {
+      "npv_rub": 162917622,
+      "note": "Li price +30%, discount 12%"
+    },
+    "evidence_grade": "synthetic_screening"
+  },
+  "evidence_grade": "synthetic",
+  "data_note": "SYNTHETIC"
+}

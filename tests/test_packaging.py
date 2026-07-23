@@ -18,4 +18,4 @@ def test_setuptools_find_only_brinevalue():
 def test_import_version():
     import brinevalue
 
-    assert brinevalue.__version__ == "0.5.1"
+    assert brinevalue.__version__ == "0.5.2"

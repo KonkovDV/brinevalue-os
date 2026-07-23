@@ -1,14 +1,24 @@
-"""Active / Bayesian-style experiment planning: propagate input uncertainty to
-NPV by Monte Carlo, greedily pick experiments (each collapses one input's
-uncertainty) that maximally reduce NPV variance. Explainable, no black box.
+"""Greedy uncertainty-reduction experiment ranking (NOT Bayesian optimization).
+
+Propagates input uncertainty to NPV by Monte Carlo, then greedily picks
+experiments (each collapses one input's sigma) that maximally reduce NPV
+variance. Explainable; no acquisition function / no posterior over policies.
+For Beta lab posteriors see bayes.py (diagnostic unless explicitly applied).
 """
-import copy, numpy as np
+import copy
+import numpy as np
 from .optimizer import screen
 
 UNCERTAIN = ["Li", "Mg", "Br", "Sr", "K", "B", "flow"]
-EXPERIMENT = {"Li": "Точный анализ Li (ICP-MS)", "Mg": "Анализ жёсткости Mg/Ca",
-              "Br": "Титрование Br", "Sr": "Анализ Sr", "K": "Анализ K",
-              "B": "Анализ B (бор)", "flow": "Замер дебита потока"}
+EXPERIMENT = {
+    "Li": "Точный анализ Li (ICP-MS)",
+    "Mg": "Анализ жёсткости Mg/Ca",
+    "Br": "Титрование Br",
+    "Sr": "Анализ Sr",
+    "K": "Анализ K",
+    "B": "Анализ B (бор)",
+    "flow": "Замер дебита потока",
+}
 
 
 def _sample_npv(brine, prices, rng, fixed):
@@ -30,7 +40,8 @@ def _std(brine, prices, fixed, n, seed):
 
 def propose_experiments(brine, prices=None, k=4, n=150, seed=0):
     chosen, plan = [], []
-    cur = _std(brine, prices, set(), n, seed); base = cur
+    cur = _std(brine, prices, set(), n, seed)
+    base = cur
     remaining = list(UNCERTAIN)
     for _ in range(min(k, len(remaining))):
         best = None
@@ -39,7 +50,21 @@ def propose_experiments(brine, prices=None, k=4, n=150, seed=0):
             if best is None or s < best[1]:
                 best = (cand, s)
         cand, s = best
-        plan.append(dict(experiment=EXPERIMENT[cand], target=cand,
-                         npv_std_after=round(s), variance_reduction_rub=round(cur - s)))
-        chosen.append(cand); remaining.remove(cand); cur = s
-    return dict(base_npv_std=round(base), plan=plan)
+        plan.append(
+            dict(
+                experiment=EXPERIMENT[cand],
+                target=cand,
+                npv_std_after=round(s),
+                variance_reduction_rub=round(cur - s),
+            )
+        )
+        chosen.append(cand)
+        remaining.remove(cand)
+        cur = s
+    return dict(
+        method="greedy_uncertainty_reduction",
+        bayesian_optimization=False,
+        base_npv_std=round(base),
+        plan=plan,
+        note="Not Bayesian optimization; ranks which lab measurement most reduces NPV std",
+    )

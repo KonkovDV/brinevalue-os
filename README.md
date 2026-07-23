@@ -1,41 +1,38 @@
-# BrineValue OS
+# BrineValue OS v0.5.2
 
-Открытый on-prem **инженерный скрининг-инструмент** пластовых/промысловых вод для выбора
-рентабельных технологий извлечения Li, Br, Sr и сопутствующих компонентов.
-Объяснимые физико-химические и техноэкономические модели, не «чёрный ящик AI».
+Открытый on-prem **инженерный скрининг-инструмент** пластовых/промысловых вод
+(Li, Br, Sr, K, B). Объяснимые физхим + TEA модели. **Не** цифровой двойник,
+**не** FEED, **не** battery-grade, **не** инвестиционный кейс без цен актива.
 
-> **Advisory only.** Требует лабораторной валидации. Не является полноценным цифровым
-> двойником установки, не FEED, не сертификат продукта и не инвестиционный кейс.
-> NPV и цены по умолчанию — placeholder (`RUB_per_kg_element`).
+> **Advisory only.** NPV/цены — `screening_placeholder` (`RUB_per_kg_element`).
+> Davies SI decision-grade только при I≤0.5. Данные demo/benchmark — **синтетические**.
+
+GitHub: https://github.com/KonkovDV/brinevalue-os
 
 ## Одна команда
 ```bash
-pip install -e .
-python -m brinevalue.cli demo --index 0 --report report.html
+pip install -e ".[excel]"   # excel optional (openpyxl)
+python -m brinevalue.cli demo --index 0 --report artifacts/demo_report.html
 python -m brinevalue.cli screen data/streams.csv
-python -m benchmark.run_benchmark   # sanity gates + exit code
-python run_tests.py                 # тесты
+python -m benchmark.run_benchmark
+python -m benchmark.redteam
+python run_tests.py
 ```
-API: `uvicorn brinevalue.api:app`. UI: `streamlit run brinevalue/dashboard.py`. `docker compose up`.
+API: `uvicorn brinevalue.api:app --host 127.0.0.1 --port 8000`  
+UI: `streamlit run brinevalue/dashboard.py`  
+Docker: `docker compose up` (operator must not expose publicly without controls)
 
 ## Конвейер
-анализ воды → ионный баланс + скейлинг (Davies только при I≤0.5) → перебор техсхем →
-экономика/NPV → uncertainty P(NPV>0) → quality gates → решение no-go/lab/pilot/scale →
-sensitivity → план лаб-опытов → калибровка.
+QC (баланс) → SI (Davies if I≤0.5) → перебор схем → TEA → P(NPV>0)+stability →
+greedy lab ranking → решение no-go/lab/pilot/scale.
 
-`recommend()` всегда применяет governance (QC + P(NPV>0)). Сырой NPV-порог доступен
-только как `raw_decision`.
-
-Лицензия: Apache-2.0. Монетизация: открытое ядро + on-prem коннекторы, адаптация, валидация.
+`recommend()` всегда governed. Сырой NPV = `raw_decision`.
 
 ## Версии
-- **v0.5.1**: red-team fixes — packaging, governed `recommend`, Davies SI gating, stale benchmark, honest naming.
+- **v0.5.2**: full INDUSTRIX audit — NaN guards, HTML SI crash fix, evaporation DLE boost,
+  waste ledger, econ validation, scheme_stability gate, honest Bayes/DoE/surrogate labels,
+  redteam suite, artifacts.
+- **v0.5.1**: packaging, governed recommend, Davies gating, stale benchmark.
 - **v0.5.0**: INDUSTRIX readiness layer.
-- **v0.4.0**: academic hardening (mass ledger, Bayesian posterior, robust governance).
-- **v0.3.0**: uncertainty-aware P(NPV>0), quality gates.
 
-Не смешиваем три уровня доказательности: синтетический скрининг, лабораторная
-валидация, промысловой пилот. В промышленную заявку уходят только показатели
-с указанным уровнем доказательности.
-
-Аудит: `docs/RED_TEAM_FULL_AUDIT_2026_07_23.md`.
+Аудит: `docs/RED_TEAM_FULL_AUDIT_2026_07_23.md`, `docs/INDUSTRIX_AUDIT_REPORT_2026_07_23.md`.

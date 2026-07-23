@@ -1,0 +1,26 @@
+{
+  "n_streams": 24,
+  "decisions": {
+    "no_go": 16,
+    "pilot": 1,
+    "lab": 6,
+    "scale": 1
+  },
+  "poor_is_nogo": true,
+  "rich_not_nogo": true,
+  "doe_reduces_variance": true,
+  "surrogate_cv_r2": 0.968,
+  "surrogate_importances": {
+    "Li": 0.85,
+    "flow": 0.132,
+    "Br": 0.003,
+    "Mg": 0.003,
+    "temp": 0.003,
+    "ph": 0.002,
+    "K": 0.002,
+    "TDS": 0.002,
+    "Sr": 0.002,
+    "B": 0.002
+  }
+}
+GATES: PASS
