@@ -128,7 +128,7 @@ def recommend(brine, prices=None, n_robust=200, seed=42):
         scaling_index=si,
         scaling_risk=flags,
         si_meta=si_meta,
-        tea_scenarios=tea_scenarios(brine, best),
+        tea_scenarios=tea_scenarios(brine, best, prices=prices),
         selection_note="best = max NPV on Pareto front; decision still governed by QC+P(NPV>0)+stability",
         decision_note=(
             "governed decision capped at pilot under screening_placeholder TEA; "

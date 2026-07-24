@@ -30,7 +30,7 @@ See `CHANGELOG.md` v0.5.2. Code + docs + `benchmark/redteam.py` + artifacts.
 |---|---|
 | `python run_tests.py` | **77/77 PASS** (current tree; regenerate claim on tag) |
 | `python -m benchmark.redteam` | **0 failures** (adversarial suite; not “47/47 checks”) |
-| `python -m benchmark.run_benchmark` | GATES PASS; typical mix no_go-dominant; governed `scale` rare/absent |
+| `python -m benchmark.run_benchmark` | GATES PASS; typical mix no_go-dominant; governed `scale` absent (capped at pilot) |
 | CLI `demo --report` | works (utf-8); decision often `lab` on synthetic |
 | CLI `screen data/streams.csv` | runs; mostly `no_go`/`lab` |
 | Excel import | works with openpyxl → `artifacts/streams_demo.xlsx` |

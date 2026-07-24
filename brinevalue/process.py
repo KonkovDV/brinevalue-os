@@ -64,7 +64,7 @@ def dle_solvent_extraction_li(b, p=None):
 def dle_electrodialysis_li(b, p=None):
     return dict(kind="dle_electrodialysis_li", recovery={"Li": 0.85},
                 reagent_kg_per_m3=0.05, kwh_per_m3=3.5,
-                note="electro-driven DLE screening (literature analog, not field-calibrated)")
+                note="electro-driven DLE screening; fixed Li recovery 0.85 (Mg pretreatment affects energy/CAPEX count, not this recovery)")
 
 
 def nf_membrane(b, p=None):
@@ -128,6 +128,7 @@ def evaluate_flowsheet(b: Brine, units):
     Screening model: no detailed hydraulics or thermodynamic equilibrium solver.
     """
     import copy
+    from .economics import DAYS
     b.validate()
     state = copy.deepcopy(b)
     state.preconcentrate = 1.0
@@ -159,7 +160,7 @@ def evaluate_flowsheet(b: Brine, units):
         reagent += res["reagent_kg_per_m3"]
         energy += res["kwh_per_m3"]
         notes.append(f"{u}: {res['note']}")
-    days = 330
+    days = DAYS
     feed_kg_yr = {i: b.ions.get(i, 0.0) * b.flow * 1000.0 * days / 1e6 for i in b.ions}
     recovered_kg_yr = {i: feed_kg_yr.get(i, 0.0) * r for i, r in overall.items()}
     waste_removed_kg_yr = {i: feed_kg_yr.get(i, 0.0) * f for i, f in removed_frac.items()}

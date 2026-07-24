@@ -3,8 +3,10 @@ NOT a process batch DoE for sorption/regeneration/product quality).
 
 Propagates input uncertainty to NPV by Monte Carlo, then greedily picks
 which **input measurement** (each collapses one input's sigma) most reduces
-NPV standard deviation. Explainable; no acquisition function / no posterior
-over policies. For Beta lab posteriors see bayes.py (diagnostic unless applied).
+NPV standard deviation. Sampling here uses independent Normal multipliers;
+``robust_screen`` uses independent lognormals — rankings are explanatory, not
+identical to the robust risk report. Explainable; no acquisition function.
+For Beta lab posteriors see bayes.py (diagnostic unless applied).
 """
 import copy
 import numpy as np

@@ -24,7 +24,7 @@
 pip install -e .
 python run_tests.py
 python -m benchmark.run_benchmark
-# live decisions ожидаемо: no_go доминирует; scale редкий
+# live decisions ожидаемо: no_go доминирует; governed scale отсутствует (cap → pilot)
 ```
 
 ## PASS / PARTIAL / FAIL — статус ремедиации

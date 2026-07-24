@@ -10,3 +10,4 @@ def test_calibrate_factor():
     assert calibrate_recovery([dict(unit="dle_sorption_li",ion="Li",predicted=0.8,observed=0.6)])[("dle_sorption_li","Li")]==0.75
 def test_apply_correction():
     assert apply_correction({"Li":0.8},{("dle_sorption_li","Li"):0.75})["Li"]==0.6
+    assert apply_correction({"Li":0.8},{("x","Li"):-0.5})["Li"]==0.0

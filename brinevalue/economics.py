@@ -113,33 +113,46 @@ def economics(brine, flowsheet, prices=None, discount=0.15, years=10,
 
 
 def price_scenarios(brine, flowsheet, scenarios=None):
-    """NPV vs Li2CO3 price. Returns list of {usd_per_t, npv_rub}."""
+    """NPV vs Li2CO3 price. Returns list of {usd_per_t, npv_rub}.
+
+    Conversion (consistent with li2co3_t = li_kg * LI_TO_LI2CO3 / 1000):
+    RUB/kg Li = (USD/t Li2CO3) * LI_TO_LI2CO3 * FX_RUB_USD / 1000.
+    """
     out = []
     for usd_t in (scenarios or LI2CO3_PRICE_SCENARIOS_USD_T):
-        li_price_rub_kg = usd_t / LI_TO_LI2CO3 * FX_RUB_USD / 1000.0
+        li_price_rub_kg = float(usd_t) * LI_TO_LI2CO3 * FX_RUB_USD / 1000.0
         ec = economics(brine, flowsheet, prices={"Li": li_price_rub_kg})
         out.append(dict(li2co3_usd_t=usd_t, npv_rub=ec["npv_rub"]))
     return out
 
 
-def tea_scenarios(brine, flowsheet):
-    """Conservative / base / optimistic screening overlays (synthetic multipliers)."""
-    base = economics(brine, flowsheet)
+def tea_scenarios(brine, flowsheet, prices=None):
+    """Conservative / base / optimistic screening overlays (synthetic multipliers).
+
+    When ``prices`` is provided (e.g. from ``recommend``), base and relative
+    Li overlays start from that map instead of silently resetting to PRODUCT_PRICE.
+    """
+    base_prices = {**PRODUCT_PRICE, **(prices or {})}
+    base = economics(brine, flowsheet, prices=base_prices)
+    li0 = float(base_prices.get("Li", PRODUCT_PRICE["Li"]))
     # Conservative: -40% Li price, +50% CAPEX, +50% OPEX, higher discount
-    cons_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 0.6}
+    cons_prices = {**base_prices, "Li": li0 * 0.6}
     cons = economics(
         brine, flowsheet, prices=cons_prices, discount=0.18,
         capex_factor=1.5, opex_factor=1.5,
     )
     # Optimistic: +30% Li price, lower discount
-    opt_prices = {**PRODUCT_PRICE, "Li": PRODUCT_PRICE["Li"] * 1.3}
+    opt_prices = {**base_prices, "Li": li0 * 1.3}
     opt = economics(brine, flowsheet, prices=opt_prices, discount=0.12)
     return {
         "conservative": {
             "npv_rub": cons["npv_rub"],
             "note": "Li price -40%, CAPEX +50%, OPEX +50%, discount 18%",
         },
-        "base": {"npv_rub": base["npv_rub"], "note": "default placeholders"},
+        "base": {
+            "npv_rub": base["npv_rub"],
+            "note": "caller prices" if prices else "default placeholders",
+        },
         "optimistic": {"npv_rub": opt["npv_rub"], "note": "Li price +30%, discount 12%"},
         "evidence_grade": "synthetic_screening",
     }

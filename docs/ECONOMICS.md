@@ -13,7 +13,7 @@ Screening TEA placeholders. **Not** FEED, **not** offtake quotes, **not** tax/lo
 | IRR | — | **`not_implemented`** |
 | Simple payback | CAPEX/net if net>0 | Yes |
 | $/t Li₂CO₃ | (OPEX+ann.CAPEX)/FX/li2co3_t | Yes — **Li-allocated, no co-product credit** by default; net-of-coproducts also reported |
-| Price sweep | NPV vs Li₂CO₃ USD/t | Yes |
+| Price sweep | NPV vs Li₂CO₃ USD/t | Yes — `usd_t * LI_TO_LI2CO3 * FX / 1000` → RUB/kg Li |
 | tea_scenarios | conservative / base / optimistic | Yes — conservative applies Li −40%, CAPEX +50%, OPEX +50%, discount 18% |
 
 ## Defaults (`PRICE_UNIT = RUB_per_kg_element`)

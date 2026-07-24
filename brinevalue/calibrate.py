@@ -34,5 +34,5 @@ def apply_correction(flowsheet_recovery, corrections, unit_ion_map=None):
         if ion not in out:
             continue
         factor = factors[0] if len(factors) == 1 else float(np.median(factors))
-        out[ion] = round(min(1.0, out[ion] * factor), 3)
+        out[ion] = round(min(1.0, max(0.0, out[ion] * factor)), 3)
     return out

@@ -37,12 +37,21 @@ def test_zero_li_zero_revenue():
 
 
 def test_price_scenarios_monotone():
+    from brinevalue.economics import LI_TO_LI2CO3, FX_RUB_USD, PRODUCT_PRICE, economics
     b = _b()
-    ps = price_scenarios(b, _fs(b))
+    fs = _fs(b)
+    ps = price_scenarios(b, fs)
     assert ps[-1]["npv_rub"] > ps[0]["npv_rub"]
+    # Must use usd_t * LI_TO_LI2CO3 * FX / 1000 (not inverted divide)
+    usd = 15000
+    implied = usd * LI_TO_LI2CO3 * FX_RUB_USD / 1000.0
+    assert implied > PRODUCT_PRICE["Li"]
+    row = next(x for x in ps if x["li2co3_usd_t"] == usd)
+    assert row["npv_rub"] == economics(b, fs, prices={"Li": implied})["npv_rub"]
 
 
 def test_conservative_tea_applies_capex_opex_factors():
+    from brinevalue.economics import PRODUCT_PRICE
     b = _b()
     fs = _fs(b)
     base = economics(b, fs)
@@ -51,5 +60,7 @@ def test_conservative_tea_applies_capex_opex_factors():
     )
     assert cons["capex_rub"] > base["capex_rub"]
     assert cons["opex_rub_yr"] > base["opex_rub_yr"]
-    scen = tea_scenarios(b, fs)
+    custom = {"Li": 8000.0}
+    scen = tea_scenarios(b, fs, prices=custom)
     assert "CAPEX +50%" in scen["conservative"]["note"]
+    assert scen["base"]["npv_rub"] == economics(b, fs, prices={**PRODUCT_PRICE, **custom})["npv_rub"]

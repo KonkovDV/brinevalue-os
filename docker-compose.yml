@@ -10,6 +10,7 @@ services:
     environment:
       # Set a non-empty token to require X-API-Token / Bearer auth on POST /analyze
       BRINEVALUE_API_TOKEN: ${BRINEVALUE_API_TOKEN:-}
+      PYTHONDONTWRITEBYTECODE: "1"
     read_only: true
     tmpfs:
       - /tmp
@@ -23,6 +24,8 @@ services:
       --server.enableXsrfProtection true
       --browser.gatherUsageStats false
     ports: ["127.0.0.1:8501:8501"]
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
     read_only: true
     tmpfs:
       - /tmp
